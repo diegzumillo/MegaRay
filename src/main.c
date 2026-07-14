@@ -186,6 +186,7 @@ int main(int argc, char **argv)
             printf("[headless] wav: %s (%d frames)\n", wav_path, wav_frames);
             free(wav);
         }
+        md_flush_sram();
         fb_stats();
         dump_cpu();
         if (shot_path) {
@@ -216,9 +217,12 @@ int main(int argc, char **argv)
     UnloadImage(blank);
     SetTextureFilter(tex, TEXTURE_FILTER_POINT);
 
+    int frame_no = 0;
     while (!WindowShouldClose()) {
         md_set_pad(0, poll_input());
         md_run_frame();
+        if (++frame_no % 60 == 0)
+            md_flush_sram();
 
         if (IsAudioStreamProcessed(stream)) {
             int n = md_read_audio(abuf, ABUF_FRAMES, OUT_RATE);
@@ -247,6 +251,7 @@ int main(int argc, char **argv)
         EndDrawing();
     }
 
+    md_flush_sram();
     UnloadTexture(tex);
     UnloadAudioStream(stream);
     CloseAudioDevice();

@@ -7,7 +7,10 @@
 uint8_t  md_rom[0x400000];
 uint32_t md_rom_size;
 uint8_t  md_ram[0x10000];
+#define SRAM_BYTES 0x8000           /* 32 KB: odd bytes of $200000-$20FFFF */
 uint8_t  md_sram[0x10000];          /* battery RAM at $200000, odd bytes */
+static bool sram_dirty;
+static char sram_path[1100];
 uint32_t md_fb[MD_SCREEN_W * MD_SCREEN_H];
 int      md_line;
 int      md_line_68k_cycles;
@@ -115,7 +118,10 @@ void m68k_write_memory_8(unsigned int a, unsigned int v)
     a &= 0xFFFFFF;
     v &= 0xFF;
     if (a >= 0xE00000) { md_ram[a & 0xFFFF] = v; return; }
-    if (is_sram(a)) { if (a & 1) md_sram[(a - 0x200000) >> 1] = v; return; }
+    if (is_sram(a)) {
+        if (a & 1) { md_sram[(a - 0x200000) >> 1] = v; sram_dirty = true; }
+        return;
+    }
     if ((a & 0xFF0000) == 0xA00000) { z80bus_write8_from68k(a, v); return; }
     if ((a & 0xFFFFE0) == 0xA10000) { io_write(a, v); return; }
     if ((a & 0xFFFF00) == 0xA11100) { z80bus_busreq_write((v << 8) | v); return; }
@@ -136,7 +142,11 @@ void m68k_write_memory_16(unsigned int a, unsigned int v)
         md_ram[i + 1] = v & 0xFF;
         return;
     }
-    if (is_sram(a)) { md_sram[(a - 0x200000) >> 1] = v & 0xFF; return; }
+    if (is_sram(a)) {
+        md_sram[(a - 0x200000) >> 1] = v & 0xFF;
+        sram_dirty = true;
+        return;
+    }
     if ((a & 0xFF0000) == 0xA00000) { z80bus_write8_from68k(a, v >> 8); return; }
     if ((a & 0xFFFFE0) == 0xA10000) { io_write(a | 1, v & 0xFF); return; }
     if ((a & 0xFFFF00) == 0xA11100) { z80bus_busreq_write(v); return; }
@@ -208,7 +218,28 @@ bool md_load_rom(const char *path)
     if (!f) return false;
     md_rom_size = (uint32_t)fread(md_rom, 1, sizeof md_rom, f);
     fclose(f);
-    return md_rom_size >= 0x200;
+    if (md_rom_size < 0x200) return false;
+
+    /* battery save lives next to the ROM as <rom>.srm */
+    snprintf(sram_path, sizeof sram_path, "%s.srm", path);
+    memset(md_sram, 0xFF, sizeof md_sram);
+    f = fopen(sram_path, "rb");
+    if (f) {
+        fread(md_sram, 1, SRAM_BYTES, f);
+        fclose(f);
+    }
+    sram_dirty = false;
+    return true;
+}
+
+void md_flush_sram(void)
+{
+    if (!sram_dirty || !sram_path[0]) return;
+    FILE *f = fopen(sram_path, "wb");
+    if (!f) return;
+    fwrite(md_sram, 1, SRAM_BYTES, f);
+    fclose(f);
+    sram_dirty = false;
 }
 
 void md_reset(void)

@@ -11,10 +11,12 @@ endif()
 include(FetchContent)
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
-# fetched as a tarball (not a git clone) so no nested .git confuses VCS tools
+# fetched as a tarball (not a git clone) so no nested .git confuses VCS tools;
+# version- and integrity-pinned for reproducible builds
 FetchContent_Declare(
   raylib
   URL https://github.com/raysan5/raylib/archive/refs/tags/5.5.tar.gz
+  URL_HASH SHA256=aea98ecf5bc5c5e0b789a76de0083a21a70457050ea4cc2aec7566935f5e258e
 )
 FetchContent_MakeAvailable(raylib)
 

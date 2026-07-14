@@ -21,6 +21,7 @@
 bool md_load_rom(const char *path);
 void md_reset(void);
 void md_run_frame(void);
+void md_flush_sram(void);   /* persist battery RAM if modified (<rom>.srm) */
 
 /* RGBA8888, MD_SCREEN_W x MD_SCREEN_H. H32 content is centered. */
 const uint32_t *md_framebuffer(void);
