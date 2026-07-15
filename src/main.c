@@ -5,6 +5,7 @@
 #include "raylib.h"
 #include "core/md.h"
 #include "core/core_internal.h"
+#include "frontend/video_filter.h"
 #include "m68k.h"
 
 #define OUT_RATE   48000
@@ -216,6 +217,8 @@ int main(int argc, char **argv)
     Texture2D tex = LoadTextureFromImage(blank);
     UnloadImage(blank);
     SetTextureFilter(tex, TEXTURE_FILTER_POINT);
+    VideoFilter filter;
+    video_filter_init(&filter, MD_SCREEN_W, MD_SCREEN_H);
 
     int frame_no = 0;
     while (!WindowShouldClose()) {
@@ -242,16 +245,16 @@ int main(int argc, char **argv)
 
         BeginDrawing();
         ClearBackground(BLACK);
-        DrawTexturePro(tex,
-                       (Rectangle){ 0, 0, MD_SCREEN_W, MD_SCREEN_H },
-                       (Rectangle){ (float)((sw - dw) / 2), (float)((sh - dh) / 2),
-                                    (float)dw, (float)dh },
-                       (Vector2){ 0, 0 }, 0.0f, WHITE);
+        video_filter_draw(&filter, tex,
+                          (Rectangle){ 0, 0, MD_SCREEN_W, MD_SCREEN_H },
+                          (Rectangle){ (float)((sw - dw) / 2), (float)((sh - dh) / 2),
+                                       (float)dw, (float)dh });
         if (IsKeyDown(KEY_F3)) DrawFPS(8, 8);
         EndDrawing();
     }
 
     md_flush_sram();
+    video_filter_unload(&filter);
     UnloadTexture(tex);
     UnloadAudioStream(stream);
     CloseAudioDevice();

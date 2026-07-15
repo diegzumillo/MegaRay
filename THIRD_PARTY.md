@@ -1,13 +1,14 @@
 # Third-party components
 
-Vendored in `src/vendor/` (license files/headers are preserved in each
-directory):
+Included in this repository (license files/headers are preserved alongside
+each component):
 
 | Component | Version / commit | License | Notes |
 |---|---|---|---|
 | [Musashi](https://github.com/kstenerud/Musashi) (68000 CPU) | `313ebf1bd9f4d0d93341eb5ce21fd8a119e9dbdd` (v4.60) | MIT | `m68kconf.h` modified: configuration values only (68000-only build, interrupt-ack and instruction-hook callbacks enabled). All modifications marked with `[megadrive_raylib]` comments. |
 | [z80](https://github.com/superzazu/z80) by superzazu (Z80 CPU) | `d64fe10a2274e5e40019b1086bf7d8990cbc5f23` | MIT | unmodified |
 | [Nuked-OPN2](https://github.com/nukeykt/Nuked-OPN2) (YM2612 FM) | `335747d78cb0abbc3b55b004e62dad9763140115` (v1.0.9) | LGPL-2.1-or-later | unmodified. LGPL source-availability obligations are satisfied by this repository; if you fork this project into a closed-source binary you must still provide Nuked-OPN2 sources and the means to relink it. |
+| [NewPixie CRT](https://github.com/libretro/slang-shaders/tree/master/crt/shaders/newpixie) by Mattias Gustavsson, Slang port by hunterk | `3b0d6aa1d134a168478cd9c904a866d969f8882b` | MIT (selected from upstream's MIT/Public Domain dual license) | Fragment shaders adapted from Slang/Vulkan syntax to GLSL 330 and integrated into a raylib multipass pipeline. Frame-overlay texture and its code path omitted. License preserved in `filters/newpixie/LICENSE`. |
 
 Fetched at build time (not vendored):
 

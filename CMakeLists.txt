@@ -37,6 +37,7 @@ add_custom_command(
 # ------------------------------------------------------------- emulator ----
 add_executable(mdplayer
   src/main.c
+  src/frontend/video_filter.c
   src/core/md.c
   src/core/vdp.c
   src/core/io.c
@@ -59,6 +60,28 @@ target_include_directories(mdplayer PRIVATE
 )
 
 target_link_libraries(mdplayer PRIVATE raylib)
+
+# Keep user-editable filter resources beside the executable in build trees.
+# This target also notices config/shader-only edits that require no relink.
+add_custom_target(mdplayer_filter_resources
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${CMAKE_CURRENT_SOURCE_DIR}/filters.cfg
+          $<TARGET_FILE_DIR:mdplayer>/filters.cfg
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+          $<TARGET_FILE_DIR:mdplayer>/filters
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+          ${CMAKE_CURRENT_SOURCE_DIR}/filters/newpixie
+          $<TARGET_FILE_DIR:mdplayer>/filters/newpixie
+  DEPENDS
+          ${CMAKE_CURRENT_SOURCE_DIR}/filters.cfg
+          ${CMAKE_CURRENT_SOURCE_DIR}/filters/newpixie/accumulate.fs
+          ${CMAKE_CURRENT_SOURCE_DIR}/filters/newpixie/blur_h.fs
+          ${CMAKE_CURRENT_SOURCE_DIR}/filters/newpixie/blur_v.fs
+          ${CMAKE_CURRENT_SOURCE_DIR}/filters/newpixie/newpixie_crt.fs
+          ${CMAKE_CURRENT_SOURCE_DIR}/filters/newpixie/LICENSE
+  VERBATIM
+)
+add_dependencies(mdplayer mdplayer_filter_resources)
 
 if(MINGW)
   target_link_libraries(mdplayer PRIVATE winmm)

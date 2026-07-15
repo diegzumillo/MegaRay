@@ -73,6 +73,47 @@ so it runs something out of the box.
 Controls: arrows = d-pad, Z/X/C = A/B/C, Enter = Start, F3 = FPS, Esc = quit.
 Gamepads are auto-detected.
 
+### Video filters
+
+The desktop frontend includes an optional four-pass adaptation of
+[NewPixie CRT](https://github.com/libretro/slang-shaders/tree/master/crt/shaders/newpixie).
+It adds phosphor persistence, two-axis light bleed, color ghosting, scanlines,
+curvature, a shadow mask, noise, flicker, and vignette. All intermediate passes
+run at the emulated 320x224 resolution; only the final CRT pass runs at the
+window resolution.
+
+The bundled `filters.cfg` enables NewPixie by default. Set `enabled = false` to
+restore the original nearest-neighbour output. The configuration and `filters/`
+directory are copied beside `mdplayer` when it is built and must remain beside
+it when the program is distributed.
+
+Available settings:
+
+- `shader_dir`: NewPixie's four GLSL fragment shaders, relative to the config
+  file or as an absolute path
+- `persistence`: previous-frame afterglow (`0.0` to `0.99`)
+- `blur_x`, `blur_y`: light-bleed radius in source pixels (`0.0` to `5.0`)
+- `curvature`: screen curvature (`0.0001` to `4.0`)
+- `interference`: animated horizontal signal distortion (`true` or `false`)
+- `interference_strength`: broad horizontal displacement; `1.0` matches the
+  original preset (`0.0` to `2.0`)
+- `interference_speed`: distortion animation rate; `0.0` freezes it (`0.0` to
+  `4.0`)
+- `interference_frequency`: vertical density of broad distortion bands (`0.25`
+  to `4.0`)
+- `interference_line_strength`: fine per-scanline horizontal ripple; `0.25`
+  matches the original preset (`0.0` to `1.0`)
+- `rolling_scanlines`: animate the scanline phase (`true` or `false`)
+- `vignette`: corner darkening (`0.0` to `1.0`)
+- `ghosting`: blurred RGB light bleed (`0.0` to `2.0`)
+- `mask_strength`: phosphor-mask intensity (`0.0` to `1.0`)
+- `brightness`: pre-tonemap brightness (`0.25` to `2.0`)
+
+Configuration values are read at startup. A missing or invalid config or shader
+leaves the normal unfiltered renderer active. NewPixie is included under its
+MIT license; its notice is preserved in `filters/newpixie/LICENSE` and
+`THIRD_PARTY.md`.
+
 ### Headless verification mode
 
 The emulator doubles as its own test harness — no window, machine-readable
