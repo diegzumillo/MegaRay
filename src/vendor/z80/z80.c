@@ -1453,7 +1453,10 @@ void exec_opcode_cb(z80* const z, uint8_t opcode) {
     z->cyc += 7;
   }
 
-  if (reg == &hl) {
+  // BIT only reads its operand. Writing the tested value back is observable
+  // for memory-mapped I/O (for example SGDK polls the YM2612 status port with
+  // BIT 7,(HL)) and can corrupt the chip's address latch.
+  if (reg == &hl && x_ != 1) {
     wb(z, get_hl(z), hl);
   }
 }

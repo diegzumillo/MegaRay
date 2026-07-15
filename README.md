@@ -10,7 +10,7 @@
 > it gave me this! The request was carefully made for everything to be
 > completely legal (see [THIRD_PARTY.md](THIRD_PARTY.md)). I did use my own
 > ears to debug the sound emulation and make it as close as possible to real
-> hardware (might still need some work). Also, XGM2 is definitely broken. 
+> hardware (might still need some work). SGDK XGM/XGM2 playback is working.
 
 A compact Sega Mega Drive / Genesis emulator in C + raylib, built for one
 specific job: **shipping SGDK homebrew games as native executables** on modern
