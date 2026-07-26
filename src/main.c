@@ -49,6 +49,7 @@ static void usage(void)
            "  --frames N          run N frames headless, then exit\n"
            "  --screenshot PATH   with --frames: save final frame as PNG\n"
            "  --break-at HEX      print when 68k PC first reaches HEX (repeatable)\n"
+           "  --dump PREFIX       with --frames: write PREFIX.{ram,vram,cram,vsram}.bin at exit\n"
            "  --scale N           window scale factor (default 3)\n");
 }
 
@@ -99,6 +100,12 @@ static void dump_cpu(void)
         printf("[dasm] %06X: %s\n", pc, buf);
         pc += len;
     }
+    uint32_t sp = m68k_get_reg(NULL, M68K_REG_SP) & 0xFFFF;
+    printf("[stack]");
+    for (int i = 0; i < 24 && sp + 3 < 0x10000; i++, sp += 4)
+        printf(" %02X%02X%02X%02X", md_ram[sp], md_ram[sp + 1],
+               md_ram[sp + 2], md_ram[sp + 3]);
+    printf("\n");
 }
 
 static void fb_stats(void)
@@ -118,6 +125,7 @@ int main(int argc, char **argv)
     const char *rom_path = NULL;
     const char *shot_path = NULL;
     const char *wav_path = NULL;
+    const char *dump_prefix = NULL;
     int frames = 0, scale = 3, auto_start = 0, ym_test = 0;
 
     for (int i = 1; i < argc; i++) {
@@ -131,6 +139,8 @@ int main(int argc, char **argv)
             auto_start = 1;
         } else if (!strcmp(argv[i], "--ym-test")) {
             ym_test = 1;
+        } else if (!strcmp(argv[i], "--dump") && i + 1 < argc) {
+            dump_prefix = argv[++i];
         } else if (!strcmp(argv[i], "--break-at") && i + 1 < argc) {
             md_add_break_pc((uint32_t)strtoul(argv[++i], NULL, 16), argv[i]);
         } else if (!strcmp(argv[i], "--scale") && i + 1 < argc) {
@@ -190,6 +200,24 @@ int main(int argc, char **argv)
         md_flush_sram();
         fb_stats();
         dump_cpu();
+        if (dump_prefix) {
+            char p[1100];
+            struct { const char *suffix; const void *data; size_t n; } d[] = {
+                { "ram.bin",   md_ram,          0x10000 },
+                { "vram.bin",  vdp_vram_ptr(),  0x10000 },
+                { "cram.bin",  vdp_cram_ptr(),  64 * 2 },
+                { "vsram.bin", vdp_vsram_ptr(), 40 * 2 },
+            };
+            for (unsigned di = 0; di < 4; di++) {
+                snprintf(p, sizeof p, "%s.%s", dump_prefix, d[di].suffix);
+                FILE *f = fopen(p, "wb");
+                if (f) {
+                    fwrite(d[di].data, 1, d[di].n, f);
+                    fclose(f);
+                    printf("[headless] dumped %s\n", p);
+                }
+            }
+        }
         if (shot_path) {
             Image img = {
                 .data = (void *)md_framebuffer(),

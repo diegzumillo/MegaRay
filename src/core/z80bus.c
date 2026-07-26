@@ -178,7 +178,13 @@ static void    zport_out(z80 *z, uint8_t port, uint8_t v) { (void)z; (void)port;
 /* ------------------------------------------------------------- 68k side */
 uint8_t z80bus_read8_from68k(uint32_t addr)
 {
-    if (!busreq) return 0xFF;       /* Z80 owns its bus */
+    if (!busreq) {
+        /* Z80 owns its bus: 68k sees open bus (last prefetch word).
+         * Real code depends on this: e.g. polling YM2612 busy without
+         * BUSREQ must NOT read a stuck-high bit 7. */
+        uint16_t pref = m68k_read_memory_16(m68k_get_reg(NULL, M68K_REG_PC) & 0xFFFFFE);
+        return (addr & 1) ? (uint8_t)pref : (uint8_t)(pref >> 8);
+    }
     return zmem_read(NULL, addr & 0xFFFF);
 }
 

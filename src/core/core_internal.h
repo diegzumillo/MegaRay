@@ -40,6 +40,9 @@ uint16_t vdp_read_data(void);
 uint16_t vdp_read_status(void);
 uint16_t vdp_read_hv(void);
 void     vdp_line_start(int line);  /* hint counter / vint, called per line */
+const uint8_t  *vdp_vram_ptr(void);   /* debug access, 0x10000 bytes */
+const uint16_t *vdp_cram_ptr(void);   /* debug access, 64 entries */
+const uint16_t *vdp_vsram_ptr(void);  /* debug access, 40 entries */
 void     vdp_render_line(int line);
 void     vdp_int_ack(int level);
 

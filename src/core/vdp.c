@@ -1,4 +1,5 @@
 /* vdp.c - Mega Drive VDP: ports, DMA, interrupts, scanline renderer */
+#include <stdio.h>
 #include <string.h>
 #include "core_internal.h"
 #include "m68k.h"
@@ -74,6 +75,10 @@ void vdp_reset(void)
     status_vint_flag = false;
     hint_counter = 0;
 }
+
+const uint8_t  *vdp_vram_ptr(void)  { return vram; }
+const uint16_t *vdp_cram_ptr(void)  { return cram; }
+const uint16_t *vdp_vsram_ptr(void) { return vsram; }
 
 /* ------------------------------------------------------------ interrupts */
 static void update_irq(void)
